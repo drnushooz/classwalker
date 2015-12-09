@@ -1,11 +1,12 @@
 package com.datastax.support;
 
-import java.lang.instrument.*;
+import org.objectweb.asm.*;
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.IllegalClassFormatException;
+import java.net.URL;
 import java.security.ProtectionDomain;
-import java.net.*;
-import java.io.*;
 
-import org.slf4j.*;
+//import org.slf4j.*;
 
 /**
  * Created by abhinavchawade on 11/25/15.
@@ -15,8 +16,11 @@ public class ClassnamePrinter implements ClassFileTransformer
     //private static final Logger log = LoggerFactory.getLogger(ClassnamePrinter.class);
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException
     {
-        System.out.printf("%s is being loaded by %s from %s\n", className.replace('/', '.'), loader.getClass().getCanonicalName(), findJarByClass(loader, className));
-        //log.info(className + " is being loaded by " + loader.getClass().getCanonicalName());
+        ClassReader classReader = new ClassReader(classfileBuffer);
+        ClassWriter classWriter = new ClassWriter(classReader,0);
+        SerialVersionUIDReader classVisitor = new SerialVersionUIDReader(classWriter);
+        classReader.accept(classVisitor,0);
+        System.out.printf("%s(%d) is being loaded by %s from %s%n", className.replace('/', '.'), classVisitor.getClassUID(), loader.getClass().getCanonicalName(), findJarByClass(loader, className));
         return classfileBuffer;
     }
 
@@ -48,5 +52,29 @@ public class ClassnamePrinter implements ClassFileTransformer
             e.printStackTrace();
         }
         return classLocation;
+    }
+}
+
+class SerialVersionUIDReader extends ClassVisitor
+{
+    private long classUID;
+
+    public SerialVersionUIDReader(final ClassVisitor cv)
+    {
+        super(Opcodes.ASM5,cv);
+    }
+
+    @Override
+    public FieldVisitor visitField(int access, String fieldName, String desc, String signature, Object value)
+    {
+        classUID = 1l;
+        if(fieldName.equals("serialVersionUID"))
+            classUID = (Long)value;
+         return super.visitField(access, fieldName, desc, signature, value);
+    }
+
+    public long getClassUID()
+    {
+        return classUID;
     }
 }

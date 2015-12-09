@@ -2,8 +2,8 @@ package com.datastax.support;
 
 import java.lang.instrument.*;
 
-import org.apache.log4j.BasicConfigurator;
-import org.slf4j.*;
+/*import org.apache.log4j.BasicConfigurator;
+import org.slf4j.*;*/
 
 /**
  * Created by abhinavchawade on 11/25/15.

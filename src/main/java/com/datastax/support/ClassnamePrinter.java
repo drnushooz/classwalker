@@ -67,7 +67,7 @@ class SerialVersionUIDReader extends ClassVisitor
     @Override
     public FieldVisitor visitField(int access, String fieldName, String desc, String signature, Object value)
     {
-        classUID = 1l;
+        classUID = 1L;
         if(fieldName.equals("serialVersionUID"))
             classUID = (Long)value;
          return super.visitField(access, fieldName, desc, signature, value);
